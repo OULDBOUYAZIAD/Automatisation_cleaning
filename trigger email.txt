@@ -1,0 +1,35 @@
+create or replace NONEDITIONABLE TRIGGER NULL_VALUES_ON_CATÉGORIE
+    BEFORE INSERT OR UPDATE ON CATÉGORIES
+  FOR EACH ROW
+    BEGIN
+        CASE
+            WHEN :NEW.CODE_CATÉGORIE IS NULL THEN
+                 SYS.send_mail( p_to => 'proadmin@gmail.com',
+                 p_from => 'ziadould@gmail.com',
+                 p_subject => 'INSERTING NULL VALUE',
+                 p_message => USER || ' IS TRYING TO INSERT NULL VALUE IN TABLE CATÉGORIE',
+                 p_smtp_host => 'localhost');
+                 RAISE_APPLICATION_ERROR(-20001,'UNAUTHORIZED OPERATION, YOU CAN''T INSERT NULL VALUE IN CODE_CATÉGORIE');
+            WHEN :NEW.NOM_DE_CATÉGORIE IS NULL THEN
+                SYS.send_mail( p_to => 'proadmin@gmail.com',
+                p_from => 'ziadould@gmail.com',
+                p_subject => 'INSERTING NULL VALUE',
+                p_message => USER ||' IS TRYING TO INSERT NULL VALUE IN TABLE CATÉGORIE ',
+                p_smtp_host => 'localhost');
+                RAISE_APPLICATION_ERROR(-20001,'YOU CAN''T INSERT NULL VALUE IN NOM_DE_CATÉGORIE');
+            WHEN :NEW.DESCRIPTION IS NULL THEN
+                SYS.send_mail( p_to => 'proadmin@gmail.com',
+                p_from => 'ziadould@gmail.com',
+                p_subject => 'INSERTING NULL VALUE',
+                p_message => USER ||' IS TRYING TO INSERT NULL VALUE IN TABLE CATÉGORIE ',
+                p_smtp_host => 'localhost');
+                RAISE_APPLICATION_ERROR(-20001,'YOU CAN''T INSERT NULL VALUE IN DESCRIPTION');
+            WHEN :NEW.ILLUSTRATION IS NULL THEN
+                SYS.send_mail( p_to => 'proadmin@gmail.com',
+                p_from => 'ziadould@gmail.com',
+                p_subject => 'INSERTING NULL VALUE',
+                p_message => USER ||' IS TRYING TO INSERT NULL VALUE IN TABLE CATÉGORIE ',
+                p_smtp_host => 'localhost');
+                RAISE_APPLICATION_ERROR(-20001,'YOU CAN''T INSERT NULL VALUE IN ILLUSTRATION');
+        END CASE;
+    END;

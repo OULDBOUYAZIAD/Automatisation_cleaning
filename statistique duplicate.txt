@@ -1,0 +1,71 @@
+c-donner les statistiques sur les doublons et null de chaque colonne ??
+
+
+PREMIERE METHODE : procedure nécessite d'entrer NAME_TABLE et NAME_COLUMN
+
+
+create or replace NONEDITIONABLE procedure statistiques_doublons (NAME_TABLE varchar2,NAME_COLUMN varchar2)
+is 
+v_check_table number ;
+v_check_column number ;
+v_number_doublons number ;
+e_table_notexist exception ;
+e_colomn_notexist exception ;
+sqlstring varchar2(300);
+v_count number ;
+v_name varchar(200);
+type c_duplicate is ref cursor ;
+c_Ndup c_duplicate;
+requete varchar2(300):= 'select '||NAME_COLUMN||',COUNT('||NAME_COLUMN||') FROM '||NAME_TABLE||' GROUP BY '||NAME_COLUMN||' HAVING COUNT('||NAME_COLUMN||') > 1 '  ;
+begin
+SELECT count(*)into v_check_table FROM all_tables WHERE table_name=NAME_TABLE;
+Select count(*) into v_check_column from user_tab_cols where upper(column_name) = NAME_COLUMN and upper(table_name) = NAME_TABLE;
+if v_check_table = 0 then raise e_table_notexist ;
+end if ;
+if v_check_column = 0 then raise e_colomn_notexist ;
+end if ;
+open c_Ndup for requete ;
+                loop
+fetch c_Ndup into v_name,v_count  ;
+exit when c_Ndup%notfound ;
+    if (v_count) is not null then 
+            dbms_output.put_line('                cette donnéé'||v_name||'est repetée : '||v_count ||'de fois');
+    end if ;
+end loop ;
+close c_Ndup ;
+exception 
+when e_table_notexist then dbms_output.put_line('table not exist');
+when e_colomn_notexist then dbms_output.put_line('column not exist');
+end;
+
+
+DEUXIEME METHODE : procedure nécessite d'entrer NAME_TABLE 
+
+--statistique avec nom de la table comme parametre
+create or replace NONEDITIONABLE procedure stat_table_doublans(TABLE_NAME1 varchar2)
+is 
+cursor column_name(TABLE_NAME1 char) is select column_name from USER_TAB_COLUMNS where TABLE_NAME = TABLE_NAME1 ;
+n number ;
+begin
+for namee in column_name(TABLE_NAME1 ) loop
+DBMS_OUTPUT.PUT_LINE('         POUR LA COLONNE '||namee.column_name||' ON A : ');
+statistiques_doublons(TABLE_NAME1,namee.column_name) ;
+end loop ;
+end;
+
+Une troisième METHODE : procedure automatiquement
+
+create or replace NONEDITIONABLE procedure stat_null_auto
+is 
+cursor table_name is select table_name from user_tables  ;
+a VARCHAR2(30);
+begin 
+open table_name;
+ loop
+fetch table_name into a ;
+exit when table_name%notfound ;
+DBMS_OUTPUT.PUT_LINE('POUR LA TABLE '||a||' ON A :');
+stat_null(a);
+
+end loop ;
+end ;

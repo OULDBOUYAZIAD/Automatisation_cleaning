@@ -1,0 +1,74 @@
+create or replace NONEDITIONABLE procedure replace_null(TABLE_NAME VARCHAR2) is
+v_val_chaine VARCHAR2(40); 
+v_val_number number ;
+v_id VARCHAR2(40) ;
+moy number(7,0) ;
+cursor col_type(TABLE_NOM varchar2) is select COLUMN_NAME,data_type from USER_TAB_COLUMNS WHERE TABLE_NAME = TABLE_NOM ;
+name_colomn VARCHAR2(50);
+type_colomn VARCHAR2(50);
+sql_string varchar(100);
+sql_string_id varchar(500);
+string_moy varchar(100); 
+id_table VARCHAR2(50) ;
+ph VARCHAR2(3) := ' ' ;
+begin 
+sql_string_id :='SELECT column_name FROM all_cons_columns  WHERE constraint_name = (
+  SELECT constraint_name FROM user_constraints 
+  WHERE UPPER(table_name) = UPPER( '''||TABLE_NAME||''' ) AND CONSTRAINT_TYPE = ''P'') ' ;
+  execute IMMEDIATE  sql_string_id into id_table ;
+for i in col_type(TABLE_NAME) loop
+         declare
+            type is_change is ref cursor ;
+            c_change is_change;
+            requete varchar2(300):= ' select '||id_table||','||i.COLUMN_NAME ||' from '||TABLE_NAME||' where ' ||i.COLUMN_NAME || ' is null '  ;
+begin
+            if REGEXP_LIKE(i.data_type, '(*)CHAR(*)')  then
+                open c_change for requete ;
+                loop
+                        fetch c_change into v_id ,v_val_chaine;
+                        exit when c_change%notfound ;
+
+                         if v_id is not null then 
+                         DBMS_OUTPUT.PUT_LINE(v_id ||id_table);
+                        sql_string := 'UPDATE '||TABLE_NAME||' set '|| i.COLUMN_NAME||' ='''||ph||'''  WHERE '||id_table||' = '''||v_id||''' ' ;
+                          execute IMMEDIATE  sql_string ;
+                          end if ;
+                end loop ; 
+                close c_change ;
+            end if ;
+            if REGEXP_LIKE(i.data_type, '(*)NUMBER(*)') then
+                open c_change for requete ;
+                loop
+                        fetch c_change into v_id,v_val_number ;
+                        exit when c_change%notfound ;
+                        string_moy := 'select avg('||i.COLUMN_NAME||') from '||TABLE_NAME||' ';
+                        execute IMMEDIATE  string_moy into moy  ;
+                        sql_string := 'UPDATE '||TABLE_NAME||' set '|| i.COLUMN_NAME||' = '||moy||'  WHERE '||id_table||' = ' ||v_id||' ' ;
+                          execute IMMEDIATE  sql_string ;
+                          end loop ;
+                close c_change ;
+            end if ;
+                end ;
+   end loop ;     
+end ;
+
+
+
+
+
+--REPLACE NULL SANS PARAMETRES
+
+create or replace NONEDITIONABLE procedure replace_null_auto
+is 
+cursor table_name is select table_name from user_tables  ;
+a VARCHAR2(30);
+begin 
+open table_name;
+ loop
+fetch table_name into a ;
+exit when table_name%notfound ;
+
+replace_null(a);
+
+end loop ;
+end ;
